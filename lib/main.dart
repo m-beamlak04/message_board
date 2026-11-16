@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
+import 'auth_gate.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,14 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        return const Scaffold(
-          body: Center(
-            child: Text(
-              'Firebase Ready! Phase 1 Complete.',
-              style: TextStyle(fontSize: 20),
-            ),
-          ),
-        );
+        return const AuthGate();
       },
     );
   }
