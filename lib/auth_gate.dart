@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'auth_service.dart';
 import 'login_screen.dart';
+import 'profile_gate.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -37,7 +38,10 @@ class _AuthGateState extends State<AuthGate> {
           return const LoginScreen();
         }
 
-        return const AuthenticatedScreen();
+        return ProfileGate(
+          key: ValueKey(snapshot.data!.uid),
+          user: snapshot.data!,
+        );
       },
     );
   }

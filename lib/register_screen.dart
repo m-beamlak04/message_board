@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'auth_service.dart';
+import 'user_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPassword = TextEditingController();
 
   final _auth = AuthService();
+  final _userService = UserService();
   bool _busy = false;
 
   @override
@@ -37,8 +39,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _busy = true);
 
+    bool accountCreated = false;
+
     try {
-      await _auth.register(email: _email.text, password: _password.text);
+      final credential = await _auth.register(
+        email: _email.text,
+        password: _password.text,
+      );
+
+      accountCreated = true;
+      final user = credential.user;
+
+      if (user == null) {
+        throw StateError('Registration returned no user.');
+      }
+
+      await _userService.saveUserRecord(
+        user,
+        firstName: _firstName.text,
+        lastName: _lastName.text,
+        role: 'user',
+      );
 
       if (!mounted) return;
       Navigator.pop(context);
@@ -66,6 +87,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(message)));
       }
+    } on FirebaseException catch (error) {
+      if (!mounted) return;
+
+      if (accountCreated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Account created, but the profile could not be saved. '
+              'Please complete your profile to continue.',
+            ),
+          ),
+        );
+
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Registration failed: ${error.message ?? error.code}',
+            ),
+          ),
+        );
+      }
+    } on StateError catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
