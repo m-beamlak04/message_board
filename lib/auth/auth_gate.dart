@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'auth_service.dart';
 import 'login_screen.dart';
-import 'profile_gate.dart';
+import '../profile/profile_gate.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
