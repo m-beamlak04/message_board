@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../auth/auth_service.dart';
 import 'user_service.dart';
 import 'complete_profile_screen.dart';
+import '../board/board_screen.dart';
 
 class ProfileGate extends StatefulWidget {
   final User user;
@@ -74,19 +75,9 @@ class _ProfileGateState extends State<ProfileGate> {
           );
         }
 
-        // Temporary Phase 3 screen (just for testing, implementation later)
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Message Board'),
-            actions: [
-              IconButton(
-                onPressed: () => AuthService().signOut(),
-                icon: const Icon(Icons.logout),
-                tooltip: 'Sign out',
-              ),
-            ],
-          ),
-          body: const Center(child: Text('Profile verified!')),
+        return BoardScreen(
+          user: widget.user,
+          authorName: '${data?['firstName']} ${data?['lastName']}',
         );
       },
     );
