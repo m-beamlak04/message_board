@@ -2,6 +2,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import '../auth/auth_gate.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,10 +26,17 @@ class _SplashScreenState extends State<SplashScreen> {
     _initialization = _initialize();
   }
 
-  Future<FirebaseApp> _initialize() {
-    return Firebase.initializeApp(
+  Future<FirebaseApp> _initialize() async {
+    final app = await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    if (kDebugMode) {
+      FirebaseAuth.instance.useAuthEmulator('10.0.2.2', 9099);
+      FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
+    }
+
+    return app;
   }
 
   @override
