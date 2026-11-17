@@ -53,12 +53,21 @@ class BoardService {
   Future<void> updateMessage({
     required String messageId,
     required String text,
-  }) {
-    throw UnimplementedError();
+  }) async {
+    final trimmedText = text.trim();
+
+    if (trimmedText.isEmpty) {
+      throw ArgumentError('Message cannot be empty.');
+    }
+
+    await _db.collection('messages').doc(messageId).update({
+      'text': trimmedText,
+      'editedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   // D - DELETE: Remove an existing message.
-  Future<void> deleteMessage(String messageId) {
-    throw UnimplementedError();
+  Future<void> deleteMessage(String messageId) async {
+    await _db.collection('messages').doc(messageId).delete();
   }
 }

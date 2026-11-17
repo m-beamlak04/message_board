@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'board_service.dart';
 import 'message.dart';
 import '../auth/auth_service.dart';
+import 'edit_message_dialog.dart';
 
 class BoardScreen extends StatefulWidget {
   final User user;
@@ -58,6 +59,57 @@ class _BoardScreenState extends State<BoardScreen> {
       if (mounted) {
         setState(() => _posting = false);
       }
+    }
+  }
+
+  Future<void> _editMessage(Message message) async {
+    final newText = await showDialog<String>(
+      context: context,
+      builder: (context) => EditMessageDialog(initialText: message.text),
+    );
+
+    if (newText == null || !mounted) return;
+
+    try {
+      await _boardService.updateMessage(messageId: message.id, text: newText);
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update message.')),
+      );
+    }
+  }
+
+  Future<void> _deleteMessage(Message message) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Message'),
+        content: const Text('Are you sure you want to delete this message?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await _boardService.deleteMessage(message.id);
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete message.')),
+      );
     }
   }
 
@@ -131,9 +183,32 @@ class _BoardScreenState extends State<BoardScreen> {
                   itemBuilder: (context, index) {
                     final message = messages[index];
 
+                    final isOwner = message.authorUid == widget.user.uid;
+
                     return ListTile(
                       title: Text(message.authorName),
                       subtitle: Text(message.text),
+                      trailing: isOwner
+                          ? PopupMenuButton<String>(
+                              onSelected: (action) {
+                                if (action == 'edit') {
+                                  _editMessage(message);
+                                } else if (action == 'delete') {
+                                  _deleteMessage(message);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text('Edit'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text('Delete'),
+                                ),
+                              ],
+                            )
+                          : null,
                     );
                   },
                 );
