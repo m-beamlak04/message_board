@@ -10,6 +10,7 @@ class BoardService {
     required String text,
     required String authorUid,
     required String authorName,
+    required String messageId,
   }) async {
     final trimmedText = text.trim();
 
@@ -17,12 +18,25 @@ class BoardService {
       throw ArgumentError('Message cannot be empty.');
     }
 
-    await _db.collection('messages').add({
-      'text': trimmedText,
-      'authorUid': authorUid,
-      'authorName': authorName,
-      'createdAt': FieldValue.serverTimestamp(),
-      'editedAt': null,
+    final messageRef = _db.collection('messages').doc(messageId);
+
+    await _db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(messageRef);
+
+      if (snapshot.exists) {
+        if (snapshot.data()?['authorUid'] != authorUid) {
+          throw StateError('Message ID belongs to another user.');
+        }
+        return;
+      }
+
+      transaction.set(messageRef, {
+        'text': trimmedText,
+        'authorUid': authorUid,
+        'authorName': authorName,
+        'createdAt': FieldValue.serverTimestamp(),
+        'editedAt': null,
+      });
     });
   }
 

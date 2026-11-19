@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -24,6 +25,7 @@ class _BoardScreenState extends State<BoardScreen> {
   late final Stream<List<Message>> _messagesStream;
 
   bool _posting = false;
+  String? _pendingMessageId;
 
   @override
   void initState() {
@@ -36,6 +38,11 @@ class _BoardScreenState extends State<BoardScreen> {
 
     if (text.isEmpty || _posting) return;
 
+    final messageId = _pendingMessageId ??= FirebaseFirestore.instance
+        .collection('messages')
+        .doc()
+        .id;
+
     setState(() => _posting = true);
 
     try {
@@ -43,9 +50,12 @@ class _BoardScreenState extends State<BoardScreen> {
         text: text,
         authorUid: widget.user.uid,
         authorName: widget.authorName,
+        messageId: messageId,
       );
 
       if (!mounted) return;
+
+      _pendingMessageId = null;
       _messageController.clear();
     } catch (_) {
       if (!mounted) return;
